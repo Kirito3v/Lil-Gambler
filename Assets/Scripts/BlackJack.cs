@@ -14,6 +14,9 @@ public class BlackJack : MonoBehaviour
     public Button Bet_btn;
     public Button Rest_btn;
     public Button Double_btn;
+    
+    private bool isDealed = false;
+    private bool isDouble = false;
 
     [SerializeField] private Deck deck;
     [SerializeField] private Player Player;
@@ -30,33 +33,37 @@ public class BlackJack : MonoBehaviour
         Double_btn.onClick.AddListener(() => DoubleOrNothingClicked());
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     private void HitClicked()
     {
-        if (deck.Hit == 5) 
+        if (isDealed) 
         {
-            Hit_btn.GetComponent<Button>().enabled = false;
-        }
-        else
-        {
-            deck.HitDrawCards();
+            if (deck.Hit == 5)
+            {
+                Hit_btn.GetComponent<Button>().enabled = false;
+            }
+            else
+            {
+                deck.HitDrawCards();
+            }
         }
     }
     private void StandClicked()
     {
-        deck.StandDrawCards();
-        Stand_btn.GetComponent<Button>().enabled = false;
+        if (isDealed) 
+        {
+            deck.StandDrawCards();
+            Stand_btn.GetComponent<Button>().enabled = false;
+        }
     }
     
     private void DealClicked()
     {
-        deck.DealDrawCards();
-        Deal_btn.GetComponent<Button>().enabled = false;
+        if (Player.Bet > 0 || isDouble) 
+        {
+            isDealed = true;
+            deck.DealDrawCards();
+            Deal_btn.GetComponent<Button>().enabled = false;
+        }
     }
 
     private void BetClicked()
@@ -66,8 +73,9 @@ public class BlackJack : MonoBehaviour
 
     private void DoubleOrNothingClicked() 
     {
-        Player.Bet *= 2;
+        deck.DoubleOrNothing();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        isDouble = true;
     }
 
     private void RestClicked()

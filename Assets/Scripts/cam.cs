@@ -15,7 +15,7 @@ public class cam : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        // Move with Player
+        // Move cam with Player
         gameObject.transform.position = player.position;
     }
 }

@@ -12,6 +12,7 @@ public class Games : MonoBehaviour
     {
         if (collision.gameObject.tag == "Player")
         {
+            text.transform.position = transform.position + Vector3.up * 7 + Vector3.forward;
             text.SetActive(true);
         }
     }

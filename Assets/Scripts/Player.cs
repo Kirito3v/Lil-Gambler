@@ -28,7 +28,7 @@ public class Player : MonoBehaviour
     private enum State { idle, walk}
     private State state = State.idle;
 
-    // intail values
+    // init values
     public int Score = 0;
     public int Bet = 0;
     bool isJackPot = false;
@@ -135,13 +135,15 @@ public class Player : MonoBehaviour
         if (movementX == -1)
         {
             transform.localScale = new Vector2(-1f, 1f);
-            rb.AddForce(movement * speed);
+            //rb.AddForce(movement * speed);
         }
         if (movementX == 1)
         {
             transform.localScale = new Vector2(1f, 1f);
-            rb.AddForce(movement * speed);
+            //rb.velocity = movement * Time.deltaTime * speed;
+            //rb.AddForce(movement * speed);
         }
+            rb.velocity = Vector2.Lerp(rb.velocity,new Vector2( movement.x * speed,rb.velocity.y), 0.1f);
     }
 
     // animation states

@@ -156,4 +156,11 @@ public class Deck : MonoBehaviour
         Player.Bet += 20;
         BetTxt.text = Player.Bet.ToString();
     }
+
+    // double or nothing 
+    public void DoubleOrNothing() 
+    {
+        Player.Score -= Player.Bet;
+        Player.Bet *= 2;
+    }
 }
