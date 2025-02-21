@@ -55,7 +55,13 @@ public class Deck2 : MonoBehaviour
 
     private void Deal() 
     {
-        PlayerHand = deck.Take(5).ToList();
+        PlayerHand.Add(new Card("Hearts", 2, Hearts[0]));
+        PlayerHand.Add(new Card("Hearts", 2, Hearts[0]));
+        PlayerHand.Add(new Card("Diamonds", 3, Diamonds[1]));
+        PlayerHand.Add(new Card("Diamonds", 3, Diamonds[1]));
+        PlayerHand.Add(new Card("Clubs", 5, Clubs[3]));
+
+        //PlayerHand = deck.Take(5).ToList();
         DealerHand = deck.Skip(5).Take(5).ToList();
     }
 
