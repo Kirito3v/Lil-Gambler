@@ -1,10 +1,14 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class Deck2 : MonoBehaviour
 {
+    [Header("Card Suit")] 
     [SerializeField] Sprite[] Hearts;
     [SerializeField] Sprite[] Diamonds;
     [SerializeField] Sprite[] Clubs;
@@ -14,21 +18,45 @@ public class Deck2 : MonoBehaviour
     private List<Card> PlayerHand = new List<Card>();
     private List<Card> DealerHand = new List<Card>();
 
+    [Header("UI Cards")]
+    [SerializeField] private GameObject[] StartCards;
+    [SerializeField] private GameObject[] DrawCards;
+
+    [Header("Compoenets")]
+    [SerializeField] private Player Player;
+    [SerializeField] private Poker Poker;
+
+    // Hand Ranking
+    private enum HandRanking 
+    {
+        High_Card,
+        One_Pair,
+        Two_Pair,
+        Three_of_a_Kind,
+        Straight,
+        Flush,
+        Full_House,
+        Four_of_a_Kind,
+        Straight_Flush,
+        Royal_Flush
+    }
+
+    // Initial values
+    public int bet = 0; 
+    int round = 0; // counter for each round
+    int Sbet = 5; // The bet you pay to start the game
+
+    [SerializeField] Text raise;
+
     // Start is called before the first frame update
     void Start()
     {
         Init();
         Shuffle();
         Deal();
-        checkRanks();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
+    # region Initialize the Deck 
     private void Init()
     {
         deck.Clear();
@@ -52,28 +80,114 @@ public class Deck2 : MonoBehaviour
             (deck[i], deck[randID]) = (deck[randID], deck[i]);
         }
     }
+    #endregion
 
+    #region Button Functions
+    // Draw Cards at the start of the game
     private void Deal() 
     {
-        PlayerHand = deck.Take(5).ToList();
-        DealerHand = deck.Skip(5).Take(5).ToList();
-        deck = deck.Skip(10).ToList();
+        PlayerHand = deck.Take(2).ToList();
+        DealerHand = deck.Skip(2).Take(5).ToList();
+        deck = deck.Skip(7).ToList();
+
+        Player.Score -= Sbet;
+
+        for (int i = 0;i < PlayerHand.Count;i++)
+            StartCards[i].GetComponent<SpriteRenderer>().sprite = PlayerHand[i].Sprite;
+
+        for (int i = 0; i < DealerHand.Count; i++)
+            StartCards[i + 2].GetComponent<SpriteRenderer>().sprite = DealerHand[i].Sprite;
     }
 
-    private void checkRanks() 
+    // Draw Cards
+    public void Check() 
     {
-        Debug.Log("PLayer's Hand: " + HandToString(PlayerHand));
-        Debug.Log("Dealer's Hand: " + HandToString(DealerHand));
+        if (round >= 5) 
+        {
+            checkRanks();
+            Poker.ScoreTxt.text = Player.Score.ToString();
+        }
+        else 
+        {
+            PlayerHand.AddRange(deck.Take(1).ToArray());
+            deck = deck.Skip(1).ToList();
+            DrawCards[round].GetComponent<SpriteRenderer>().sprite = PlayerHand[round + 2].Sprite;
+            Poker.PlayerHandRank.text = calRanks(PlayerHand).ToString();
+            round++;
+        }
+    }
 
+    public void Fold() 
+    {
+        checkRanks(true);
+    }
 
+    // Raise the Bet
+    public void Raise() 
+    {
+        bet += int.Parse(raise.text);
+        Player.Score -= bet;
+    }
+
+    // Now or Never
+    public void AllIn() 
+    {
+        bet += Player.Score;
+
+        checkRanks(false, true);
+    }
+    #endregion
+
+    #region Check final Hand Rank for Player and Dealer
+    private void checkRanks(bool isFold = false, bool isAllIn = false) 
+    {
         var PlayerRank = calRanks(PlayerHand);
         var DealerRank = calRanks(DealerHand);
 
-        Debug.Log($"Player's Rank: {PlayerRank}");
-        Debug.Log($"Dealer's Rank: {DealerRank}");
+        Poker.PlayerHandRank.text = PlayerRank.ToString();
+        Poker.DealerHandRank.text = DealerRank.ToString();
+
+        if (isFold) 
+        {
+
+        }
+        else if (isAllIn)
+        {
+            WhoIsHigher(PlayerRank, DealerRank);
+        }
+        else
+        {
+            WhoIsHigher(PlayerRank, DealerRank);
+        }
+
+        Poker.Check_btn.GetComponent<Button>().enabled = false;
+        Poker.Fold_btn.GetComponent<Button>().enabled = false;
+        Poker.Raise_btn.GetComponent<Button>().enabled = false;
+        Poker.AllIn_btn.GetComponent<Button>().enabled = false;
+
+        Poker.Rest_btn.gameObject.SetActive(true);
     }
 
-    private string calRanks(List<Card> hand) 
+    private void WhoIsHigher(HandRanking PlayerRank, HandRanking DealerRank)
+    {
+        if (PlayerRank > DealerRank)
+        {
+            Player.Score += (bet + Sbet) * 2;
+            Poker.ScoreTxt.text = Player.Score.ToString();
+        }
+        else if (PlayerRank < DealerRank)
+        {
+
+        }
+        else
+        {
+            Player.Score += (bet + Sbet);
+        }
+    }
+    #endregion
+
+    // Calculate Hand Rank
+    private HandRanking calRanks(List<Card> hand) 
     {
         var rankCount = hand.
             GroupBy(card => card.Rank).
@@ -89,19 +203,20 @@ public class Deck2 : MonoBehaviour
         bool isAceLowStright = sortedRanks.SequenceEqual(new List<int> { 2, 3, 4, 5, 14 });
         bool isRoyalFlush = isFlush && sortedRanks.SequenceEqual(new List<int> { 10, 11, 12, 13, 14 });
 
-        if (isRoyalFlush) return "Royal Flush";
-        if (isFlush && isStraight) return "Straight Flush";
-        if (rankCount.ContainsValue(4)) return "Four of a Kind";
-        if (rankCount.ContainsValue(3) && rankCount.ContainsValue(2)) return "Full House";
-        if (isFlush) return "Flush";
-        if (isStraight || isAceLowStright) return "Straight";
-        if (rankCount.ContainsValue(3)) return "Three of a Kind";
-        if (rankCount.Values.Count(v => v == 2) == 2) return "Two Pair";
-        if (rankCount.ContainsValue(2)) return "One Pair";
+        if (isRoyalFlush) return HandRanking.Royal_Flush;
+        if (isFlush && isStraight) return HandRanking.Straight_Flush;
+        if (rankCount.ContainsValue(4)) return HandRanking.Four_of_a_Kind;
+        if (rankCount.ContainsValue(3) && rankCount.ContainsValue(2)) return HandRanking.Full_House;
+        if (isFlush) return HandRanking.Flush ;
+        if (isStraight || isAceLowStright) return HandRanking.Straight;
+        if (rankCount.ContainsValue(3)) return HandRanking.Three_of_a_Kind;
+        if (rankCount.Values.Count(v => v == 2) == 2) return HandRanking.Two_Pair;
+        if (rankCount.ContainsValue(2)) return HandRanking.One_Pair;
         
-        return "High Card";
+        return HandRanking.High_Card;
     }
 
+    // For testing process 
     private string HandToString(List<Card> hand) 
     {
         return string.Join(", ", hand.Select(card => $"{card.Rank} of {card.Suit}"));

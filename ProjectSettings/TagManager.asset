@@ -6,6 +6,7 @@ TagManager:
   tags:
   - JackPot
   - BlackJack
+  - Poker
   layers:
   - Default
   - TransparentFX

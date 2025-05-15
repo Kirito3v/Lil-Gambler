@@ -33,6 +33,7 @@ public class Player : MonoBehaviour
     public int Bet = 0;
     bool isJackPot = false;
     bool isBlackJack = false;
+    bool isPoker = false;
 
     // Start is called before the first frame update
     void Start()
@@ -63,6 +64,10 @@ public class Player : MonoBehaviour
         {
             SceneManager.LoadScene("BlackJack");
         }
+        else if (isPoker)
+        {
+            SceneManager.LoadScene("Poker");
+        }
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -74,6 +79,11 @@ public class Player : MonoBehaviour
         else if (collision.gameObject.tag == "BlackJack")
         {
             isBlackJack = true;
+            act.action.Enable();
+        }
+        else if (collision.gameObject.tag == "Poker")
+        {
+            isPoker = true;
             act.action.Enable();
         }
     }
@@ -89,34 +99,12 @@ public class Player : MonoBehaviour
             isBlackJack = false;
             act.action.Disable();
         }
+        else if (collision.gameObject.tag == "Poker")
+        {
+            isPoker = false;
+            act.action.Disable();
+        }
     }
-    //private void OnCollisionEnter2D(Collision2D collision)
-    //{
-    //    if (collision.gameObject.tag == "JackPot")
-    //    {
-    //        isJackPot = true;
-    //        act.action.Enable();
-    //    }
-    //    else if (collision.gameObject.tag == "BlackJack")
-    //    {
-    //        isBlackJack = true;
-    //        act.action.Enable();
-    //    }
-    //}
-
-    //private void OnCollisionExit(Collision collision)
-    //{
-    //    if (collision.gameObject.tag == "JackPot")
-    //    {
-    //        isJackPot = false;
-    //        act.action.Disable();
-    //    }
-    //    else if (collision.gameObject.tag == "BlackJack")
-    //    {
-    //        isBlackJack = false;
-    //        act.action.Disable();
-    //    }
-    //}
 
     // movement input
     private void OnMove(InputValue MV)
@@ -135,13 +123,10 @@ public class Player : MonoBehaviour
         if (movementX == -1)
         {
             transform.localScale = new Vector2(-1f, 1f);
-            //rb.AddForce(movement * speed);
         }
         if (movementX == 1)
         {
             transform.localScale = new Vector2(1f, 1f);
-            //rb.velocity = movement * Time.deltaTime * speed;
-            //rb.AddForce(movement * speed);
         }
             rb.velocity = Vector2.Lerp(rb.velocity,new Vector2( movement.x * speed,rb.velocity.y), 0.1f);
     }
